@@ -23,6 +23,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>translator_lib</RootNamespace>
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
     <DefaultLanguage>en-US</DefaultLanguage>
     <AppContainerApplication>true</AppContainerApplication>
     <ApplicationTypeRevision>8.1</ApplicationTypeRevision>
@@ -36,6 +37,7 @@
     <PlatformToolset>v120_wp81</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props"/>
+  <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props"/>
   <ImportGroup Label="ExtensionSettings"/>
   <ImportGroup Label="PropertySheets">
     <Import Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props"/>
@@ -60,7 +62,7 @@
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <CompileAsWinRT>false</CompileAsWinRT>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>4100;4127;4244;4267;4702;4718;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4100;4127;4267;4702;4718;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <ExceptionHandling>false</ExceptionHandling>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <MinimalRebuild>false</MinimalRebuild>
@@ -103,7 +105,7 @@
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <CompileAsWinRT>false</CompileAsWinRT>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>4100;4127;4244;4267;4702;4718;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4100;4127;4267;4702;4718;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <ExceptionHandling>false</ExceptionHandling>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <MinimalRebuild>false</MinimalRebuild>
@@ -145,7 +147,7 @@
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <CompileAsWinRT>false</CompileAsWinRT>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>4100;4127;4244;4267;4702;4718;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4100;4127;4267;4702;4718;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <ExceptionHandling>false</ExceptionHandling>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <MinimalRebuild>false</MinimalRebuild>
@@ -187,7 +189,7 @@
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <CompileAsWinRT>false</CompileAsWinRT>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>4100;4127;4244;4267;4702;4718;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4100;4127;4267;4702;4718;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <ExceptionHandling>false</ExceptionHandling>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <MinimalRebuild>false</MinimalRebuild>
@@ -244,10 +246,10 @@
     <ClInclude Include="..\..\..\..\src\compiler\translator\BaseTypes.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\BuiltInFunctionEmulator.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\BuiltInFunctionEmulatorGLSL.h"/>
+    <ClInclude Include="..\..\..\..\src\compiler\translator\CallDAG.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\Common.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\Compiler.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\ConstantUnion.h"/>
-    <ClInclude Include="..\..\..\..\src\compiler\translator\DetectCallDepth.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\Diagnostics.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\DirectiveHandler.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\EmulatePrecision.h"/>
@@ -273,6 +275,7 @@
     <ClInclude Include="..\..\..\..\src\compiler\translator\ParseContext.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\PoolAlloc.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\Pragma.h"/>
+    <ClInclude Include="..\..\..\..\src\compiler\translator\PruneEmptyDeclarations.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\QualifierAlive.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\RegenerateStructNames.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\RenameFunction.h"/>
@@ -283,6 +286,7 @@
     <ClInclude Include="..\..\..\..\src\compiler\translator\TranslatorGLSL.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\Types.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\UnfoldShortCircuitAST.h"/>
+    <ClInclude Include="..\..\..\..\src\compiler\translator\ValidateGlobalInitializer.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\ValidateLimitations.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\ValidateOutputs.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\ValidateSwitch.h"/>
@@ -290,7 +294,6 @@
     <ClInclude Include="..\..\..\..\src\compiler\translator\VariablePacker.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\VersionGLSL.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\blocklayout.h"/>
-    <ClInclude Include="..\..\..\..\src\compiler\translator\compilerdebug.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\depgraph\DependencyGraph.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\depgraph\DependencyGraphBuilder.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\depgraph\DependencyGraphOutput.h"/>
@@ -302,24 +305,28 @@
     <ClInclude Include="..\..\..\..\src\compiler\translator\timing\RestrictVertexShaderTiming.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\util.h"/>
     <ClInclude Include="..\..\..\..\src\third_party\compiler\ArrayBoundsClamper.h"/>
+    <ClInclude Include="..\..\..\..\src\compiler\translator\ArrayReturnValueToOutParameter.h"/>
+    <ClInclude Include="..\..\..\..\src\compiler\translator\ASTMetadataHLSL.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\blocklayoutHLSL.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\BuiltInFunctionEmulatorHLSL.h"/>
-    <ClInclude Include="..\..\..\..\src\compiler\translator\DetectDiscontinuity.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\OutputHLSL.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\RemoveSwitchFallThrough.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\RewriteElseBlocks.h"/>
+    <ClInclude Include="..\..\..\..\src\compiler\translator\SeparateArrayInitialization.h"/>
+    <ClInclude Include="..\..\..\..\src\compiler\translator\SeparateDeclarations.h"/>
+    <ClInclude Include="..\..\..\..\src\compiler\translator\SimplifyArrayAssignment.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\StructureHLSL.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\TranslatorHLSL.h"/>
-    <ClInclude Include="..\..\..\..\src\compiler\translator\UnfoldShortCircuit.h"/>
+    <ClInclude Include="..\..\..\..\src\compiler\translator\UnfoldShortCircuitToIf.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\UniformHLSL.h"/>
     <ClInclude Include="..\..\..\..\src\compiler\translator\UtilsHLSL.h"/>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\src\compiler\translator\BuiltInFunctionEmulator.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\BuiltInFunctionEmulatorGLSL.cpp"/>
+    <ClCompile Include="..\..\..\..\src\compiler\translator\CallDAG.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\CodeGen.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\Compiler.cpp"/>
-    <ClCompile Include="..\..\..\..\src\compiler\translator\DetectCallDepth.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\Diagnostics.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\DirectiveHandler.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\EmulatePrecision.cpp"/>
@@ -340,6 +347,7 @@
     <ClCompile Include="..\..\..\..\src\compiler\translator\OutputGLSLBase.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\ParseContext.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\PoolAlloc.cpp"/>
+    <ClCompile Include="..\..\..\..\src\compiler\translator\PruneEmptyDeclarations.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\QualifierAlive.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\RegenerateStructNames.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\ScalarizeVecAndMatConstructorArgs.cpp"/>
@@ -349,6 +357,7 @@
     <ClCompile Include="..\..\..\..\src\compiler\translator\TranslatorGLSL.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\Types.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\UnfoldShortCircuitAST.cpp"/>
+    <ClCompile Include="..\..\..\..\src\compiler\translator\ValidateGlobalInitializer.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\ValidateLimitations.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\ValidateOutputs.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\ValidateSwitch.cpp"/>
@@ -356,7 +365,6 @@
     <ClCompile Include="..\..\..\..\src\compiler\translator\VariablePacker.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\VersionGLSL.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\blocklayout.cpp"/>
-    <ClCompile Include="..\..\..\..\src\compiler\translator\compilerdebug.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\depgraph\DependencyGraph.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\depgraph\DependencyGraphBuilder.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\depgraph\DependencyGraphOutput.cpp"/>
@@ -369,18 +377,23 @@
     <ClCompile Include="..\..\..\..\src\compiler\translator\timing\RestrictVertexShaderTiming.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\util.cpp"/>
     <ClCompile Include="..\..\..\..\src\third_party\compiler\ArrayBoundsClamper.cpp"/>
+    <ClCompile Include="..\..\..\..\src\compiler\translator\ArrayReturnValueToOutParameter.cpp"/>
+    <ClCompile Include="..\..\..\..\src\compiler\translator\ASTMetadataHLSL.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\blocklayoutHLSL.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\BuiltInFunctionEmulatorHLSL.cpp"/>
-    <ClCompile Include="..\..\..\..\src\compiler\translator\DetectDiscontinuity.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\OutputHLSL.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\RemoveSwitchFallThrough.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\RewriteElseBlocks.cpp"/>
+    <ClCompile Include="..\..\..\..\src\compiler\translator\SeparateArrayInitialization.cpp"/>
+    <ClCompile Include="..\..\..\..\src\compiler\translator\SeparateDeclarations.cpp"/>
+    <ClCompile Include="..\..\..\..\src\compiler\translator\SimplifyArrayAssignment.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\StructureHLSL.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\TranslatorHLSL.cpp"/>
-    <ClCompile Include="..\..\..\..\src\compiler\translator\UnfoldShortCircuit.cpp"/>
+    <ClCompile Include="..\..\..\..\src\compiler\translator\UnfoldShortCircuitToIf.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\UniformHLSL.cpp"/>
     <ClCompile Include="..\..\..\..\src\compiler\translator\UtilsHLSL.cpp"/>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets"/>
+  <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets"/>
   <ImportGroup Label="ExtensionTargets"/>
 </Project>

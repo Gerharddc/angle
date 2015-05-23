@@ -33,6 +33,7 @@ struct TextureCaps
     // Support for being used as a framebuffer attachment or renderbuffer format
     bool renderable;
 
+    // Set of supported sample counts, only guaranteed to be valid in ES3.
     SupportedSampleSet sampleCounts;
 
     // Get the maximum number of samples supported
@@ -177,7 +178,6 @@ struct Extensions
 
     // GL_ANGLE_framebuffer_multisample
     bool framebufferMultisample;
-    GLuint maxSamples;
 
     // GL_ANGLE_instanced_arrays
     bool instancedArrays;
@@ -208,6 +208,9 @@ struct Extensions
 
     // GL_ANGLE_translated_shader_source
     bool translatedShaderSource;
+
+    // GL_OES_fbo_render_mipmap
+    bool fboRenderMipmap;
 
     // GL_EXT_discard_framebuffer
     bool discardFramebuffer;
@@ -305,6 +308,9 @@ struct Caps
     GLuint maxTransformFeedbackInterleavedComponents;
     GLuint maxTransformFeedbackSeparateAttributes;
     GLuint maxTransformFeedbackSeparateComponents;
+
+    // Table 6.35, Framebuffer Dependent Values
+    GLuint maxSamples;
 };
 
 }
@@ -347,6 +353,20 @@ struct DisplayExtensions
 
     // EGL_KHR_create_context
     bool createContext;
+
+    // EGL_EXT_device_query
+    bool deviceQuery;
+};
+
+struct DeviceExtensions
+{
+    DeviceExtensions();
+
+    // Generate a vector of supported extension strings
+    std::vector<std::string> getStrings() const;
+
+    // EGL_ANGLE_device_d3d
+    bool deviceD3D;
 };
 
 struct ClientExtensions

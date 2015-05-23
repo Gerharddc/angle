@@ -9,6 +9,7 @@
         'windows_sdk_path%': 'C:/Program Files (x86)/Windows Kits/8.1',
         'angle_build_winrt%': '0',
         'angle_build_winphone%': '0',
+        'angle_build_winrt_app_type_revision%': '8.1',
     },
     'msvs_disabled_warnings':
     [
@@ -16,7 +17,6 @@
         4127, # conditional expression is constant. Too noisy to be useful.
 
         # Conversion warnings.  These fire all over the place in ANGLE.
-        4244, # Conversion from 'type1' to 'type2', possible loss of data
         4267, # Conversion from 'size_t' to 'type', possible loss of data
 
         # TODO: 4702 doesn't fire on xtree in VS2015 (CTP6). We can remove C4702 after moving to VS2015.

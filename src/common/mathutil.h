@@ -155,7 +155,7 @@ inline unsigned short float32ToFloat16(float fp32)
 
     if(abs > 0x47FFEFFF)   // Infinity
     {
-        return sign | 0x7FFF;
+        return static_cast<unsigned short>(sign | 0x7FFF);
     }
     else if(abs < 0x38800000)   // Denormal
     {
@@ -171,11 +171,11 @@ inline unsigned short float32ToFloat16(float fp32)
             abs = 0;
         }
 
-        return sign | (abs + 0x00000FFF + ((abs >> 13) & 1)) >> 13;
+        return static_cast<unsigned short>(sign | (abs + 0x00000FFF + ((abs >> 13) & 1)) >> 13);
     }
     else
     {
-        return sign | (abs + 0xC8000000 + 0x00000FFF + ((abs >> 13) & 1)) >> 13;
+        return static_cast<unsigned short>(sign | (abs + 0xC8000000 + 0x00000FFF + ((abs >> 13) & 1)) >> 13);
     }
 }
 
@@ -422,14 +422,14 @@ inline float normalizedToFloat(T input)
 template <typename T>
 inline T floatToNormalized(float input)
 {
-    return std::numeric_limits<T>::max() * input + 0.5f;
+    return static_cast<T>(std::numeric_limits<T>::max() * input + 0.5f);
 }
 
 template <unsigned int outputBitCount, typename T>
 inline T floatToNormalized(float input)
 {
     static_assert(outputBitCount < (sizeof(T) * 8), "T must have more bits than outputBitCount.");
-    return ((1 << outputBitCount) - 1) * input + 0.5f;
+    return static_cast<T>(((1 << outputBitCount) - 1) * input + 0.5f);
 }
 
 template <unsigned int inputBitCount, unsigned int inputBitStart, typename T>
@@ -493,18 +493,13 @@ inline unsigned short averageHalfFloat(unsigned short a, unsigned short b)
 
 inline unsigned int averageFloat11(unsigned int a, unsigned int b)
 {
-    return float32ToFloat11((float11ToFloat32(a) + float11ToFloat32(b)) * 0.5f);
+    return float32ToFloat11((float11ToFloat32(static_cast<unsigned short>(a)) + float11ToFloat32(static_cast<unsigned short>(b))) * 0.5f);
 }
 
 inline unsigned int averageFloat10(unsigned int a, unsigned int b)
 {
-    return float32ToFloat10((float10ToFloat32(a) + float10ToFloat32(b)) * 0.5f);
+    return float32ToFloat10((float10ToFloat32(static_cast<unsigned short>(a)) + float10ToFloat32(static_cast<unsigned short>(b))) * 0.5f);
 }
-
-}
-
-namespace rx
-{
 
 // Represents intervals of the type [a, b)
 template <typename T>
@@ -533,6 +528,11 @@ struct Range
 
 typedef Range<int> RangeI;
 typedef Range<unsigned int> RangeUI;
+
+}
+
+namespace rx
+{
 
 template <typename T>
 T roundUp(const T value, const T alignment)
@@ -569,6 +569,7 @@ inline bool IsIntegerCastSafe(BigIntT bigValue)
 #if defined(_MSC_VER)
 
 #define ANGLE_ROTL(x,y) _rotl(x,y)
+#define ANGLE_ROTR16(x,y) _rotr16(x,y)
 
 #else
 
@@ -577,7 +578,13 @@ inline uint32_t RotL(uint32_t x, int8_t r)
     return (x << r) | (x >> (32 - r));
 }
 
+inline uint16_t RotR16(uint16_t x, int8_t r)
+{
+    return (x >> r) | (x << (16 - r));
+}
+
 #define ANGLE_ROTL(x,y) RotL(x,y)
+#define ANGLE_ROTR16(x,y) RotR16(x,y)
 
 #endif // namespace rx
 

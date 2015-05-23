@@ -25,6 +25,7 @@ namespace rx
 {
 class RenderTarget11;
 struct Workarounds;
+struct Renderer11DeviceCaps;
 
 namespace gl_d3d11
 {
@@ -51,7 +52,7 @@ namespace d3d11_gl
 {
 
 GLint GetMaximumClientVersion(D3D_FEATURE_LEVEL featureLevel);
-void GenerateCaps(ID3D11Device *device, ID3D11DeviceContext *deviceContext, gl::Caps *caps, gl::TextureCapsMap *textureCapsMap, gl::Extensions *extensions);
+void GenerateCaps(ID3D11Device *device, ID3D11DeviceContext *deviceContext, const Renderer11DeviceCaps &renderer11DeviceCaps, gl::Caps *caps, gl::TextureCapsMap *textureCapsMap, gl::Extensions *extensions);
 
 }
 
@@ -63,7 +64,7 @@ int InvertYAxis(int renderTargetHeight, int rectTop, int rectHeight);
 
 void MakeValidSize(bool isImage, DXGI_FORMAT format, GLsizei *requestWidth, GLsizei *requestHeight, int *levelOffset);
 
-void GenerateInitialTextureData(GLint internalFormat, D3D_FEATURE_LEVEL featureLevel, GLuint width, GLuint height, GLuint depth,
+void GenerateInitialTextureData(GLint internalFormat, const Renderer11DeviceCaps &renderer11DeviceCaps, GLuint width, GLuint height, GLuint depth,
                                 GLuint mipLevels, std::vector<D3D11_SUBRESOURCE_DATA> *outSubresourceData,
                                 std::vector< std::vector<BYTE> > *outData);
 
@@ -141,10 +142,13 @@ inline ID3D11VertexShader *CompileVS(ID3D11Device *device, const BYTE (&byteCode
 {
     ID3D11VertexShader *vs = NULL;
     HRESULT result = device->CreateVertexShader(byteCode, N, NULL, &vs);
-    UNUSED_ASSERTION_VARIABLE(result);
     ASSERT(SUCCEEDED(result));
-    SetDebugName(vs, name);
-    return vs;
+    if (SUCCEEDED(result))
+    {
+        SetDebugName(vs, name);
+        return vs;
+    }
+    return NULL;
 }
 
 template <unsigned int N>
@@ -152,10 +156,13 @@ inline ID3D11GeometryShader *CompileGS(ID3D11Device *device, const BYTE (&byteCo
 {
     ID3D11GeometryShader *gs = NULL;
     HRESULT result = device->CreateGeometryShader(byteCode, N, NULL, &gs);
-    UNUSED_ASSERTION_VARIABLE(result);
     ASSERT(SUCCEEDED(result));
-    SetDebugName(gs, name);
-    return gs;
+    if (SUCCEEDED(result))
+    {
+        SetDebugName(gs, name);
+        return gs;
+    }
+    return NULL;
 }
 
 template <unsigned int N>
@@ -163,10 +170,13 @@ inline ID3D11PixelShader *CompilePS(ID3D11Device *device, const BYTE (&byteCode)
 {
     ID3D11PixelShader *ps = NULL;
     HRESULT result = device->CreatePixelShader(byteCode, N, NULL, &ps);
-    UNUSED_ASSERTION_VARIABLE(result);
     ASSERT(SUCCEEDED(result));
-    SetDebugName(ps, name);
-    return ps;
+    if (SUCCEEDED(result))
+    {
+        SetDebugName(ps, name);
+        return ps;
+    }
+    return NULL;
 }
 
 // Copy data to small D3D11 buffers, such as for small constant buffers, which use one struct to
@@ -174,15 +184,15 @@ inline ID3D11PixelShader *CompilePS(ID3D11Device *device, const BYTE (&byteCode)
 template <class T>
 inline void SetBufferData(ID3D11DeviceContext *context, ID3D11Buffer *constantBuffer, const T &value)
 {
-    D3D11_MAPPED_SUBRESOURCE mappedResource;
-    context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-
-    memcpy(mappedResource.pData, &value, sizeof(T));
-
-    context->Unmap(constantBuffer, 0);
+    D3D11_MAPPED_SUBRESOURCE mappedResource = {};
+    HRESULT result = context->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    ASSERT(SUCCEEDED(result));
+    if (SUCCEEDED(result))
+    {
+        memcpy(mappedResource.pData, &value, sizeof(T));
+        context->Unmap(constantBuffer, 0);
+    }
 }
-
-gl::Error GetAttachmentRenderTarget(const gl::FramebufferAttachment *attachment, RenderTarget11 **outRT);
 
 Workarounds GenerateWorkarounds(D3D_FEATURE_LEVEL featureLevel);
 

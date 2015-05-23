@@ -12,7 +12,7 @@
 
 #include "libANGLE/renderer/d3d/ImageD3D.h"
 #include "libANGLE/ImageIndex.h"
-
+#include "libANGLE/renderer/d3d/formatutilsD3D.h"
 #include "common/debug.h"
 
 namespace gl
@@ -30,8 +30,6 @@ class Image11 : public ImageD3D
   public:
     Image11(Renderer11 *renderer);
     virtual ~Image11();
-
-    static Image11 *makeImage11(ImageD3D *img);
 
     static gl::Error generateMipmap(Image11 *dest, Image11 *src);
 
@@ -59,17 +57,21 @@ class Image11 : public ImageD3D
     void unmap();
 
   private:
-    DISALLOW_COPY_AND_ASSIGN(Image11);
-
     gl::Error copyToStorageImpl(TextureStorage11 *storage11, const gl::ImageIndex &index, const gl::Box &region);
     gl::Error copy(const gl::Offset &destOffset, const gl::Box &sourceArea, ID3D11Resource *source, UINT sourceSubResource);
+
+    gl::Error copyAndConvertTexture(ID3D11Resource *input, DXGI_FORMAT inputFormat,
+                                    ID3D11Resource *output, DXGI_FORMAT outputFormat,
+                                    unsigned int subresourceIndex, size_t width, size_t height, size_t depth);
+
+    gl::Error createTemporaryRenderableFormatImage2D(DXGI_FORMAT format, ID3D11Texture2D **output);
+    gl::Error createTemporaryRenderableFormatImage3D(DXGI_FORMAT format, ID3D11Texture3D **output);
 
     gl::Error getStagingTexture(ID3D11Resource **outStagingTexture, unsigned int *outSubresourceIndex);
     gl::Error createStagingTexture();
     void releaseStagingTexture();
 
     Renderer11 *mRenderer;
-    D3D_FEATURE_LEVEL mFeatureLevel;
 
     DXGI_FORMAT mDXGIFormat;
     ID3D11Resource *mStagingTexture;
@@ -79,6 +81,8 @@ class Image11 : public ImageD3D
     TextureStorage11 *mAssociatedStorage;
     gl::ImageIndex mAssociatedImageIndex;
     unsigned int mRecoveredFromStorageCount;
+
+    bool mRenderableTextureUsesDifferentFormat;
 };
 
 }
