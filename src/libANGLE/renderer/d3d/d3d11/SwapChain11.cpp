@@ -118,8 +118,7 @@ EGLint SwapChain11::resetOffscreenTexture(int backbufferWidth, int backbufferHei
 
     releaseOffscreenTexture();
 
-    HRESULT result;
-
+    HRESULT result = S_OK;
     const d3d11::TextureFormat &backbufferFormatInfo = d3d11::GetTextureFormatInfo(mBackBufferFormat, mRenderer->getRenderer11DeviceCaps(), true);
 
     if (!mRenderToBackBuffer)

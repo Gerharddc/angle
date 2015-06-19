@@ -204,7 +204,7 @@ gl::Error Image11::recoverFromAssociatedStorage()
 
         bool textureStorageCorrect = mAssociatedStorage->isAssociatedImageValid(mAssociatedImageIndex, this);
 
-        // This means that the cached TextureStorage has been modified after this Image11 released its copy of its data. 
+        // This means that the cached TextureStorage has been modified after this Image11 released its copy of its data.
         // This should not have happened. The TextureStorage should have told this Image11 to recover its data before it was overwritten.
         ASSERT(textureStorageCorrect);
 
@@ -755,13 +755,13 @@ void Image11::unmap()
     }
 }
 
-gl::Error Image11::copyAndConvertTexture(ID3D11Resource *input, DXGI_FORMAT inputFormat, 
-                                         ID3D11Resource *output, DXGI_FORMAT outputFormat, 
+gl::Error Image11::copyAndConvertTexture(ID3D11Resource *input, DXGI_FORMAT inputFormat,
+                                         ID3D11Resource *output, DXGI_FORMAT outputFormat,
                                          unsigned int subresourceIndex, size_t width, size_t height, size_t depth)
 {
     ASSERT(input);
     ASSERT(output);
-    
+
     D3D11_MAPPED_SUBRESOURCE inputMap;
     D3D11_MAPPED_SUBRESOURCE outputMap;
     HRESULT hr = S_OK;

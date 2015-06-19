@@ -570,7 +570,7 @@ gl::Error TextureD3D::ensureRenderTarget()
             {
                 // We have to use the images to recover the data from the old texture storage,
                 // and copy it into the new texture storage
-                
+
                 // Deleting the texture storage will force the images to recover their data
                 SafeDelete(mTexStorage);
 

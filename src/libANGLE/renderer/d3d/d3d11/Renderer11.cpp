@@ -232,6 +232,7 @@ Renderer11::Renderer11(egl::Display *display)
     mRenderer11DeviceCaps.supportsClearView = false;
     mRenderer11DeviceCaps.supportsConstantBufferOffsets = false;
     mRenderer11DeviceCaps.supportsDXGI1_2 = false;
+    mRenderer11DeviceCaps.B5G6R5support = 0;
     mRenderer11DeviceCaps.B4G4R4A4support = 0;
     mRenderer11DeviceCaps.B5G5R5A1support = 0;
 
@@ -570,6 +571,8 @@ void Renderer11::initializeDevice()
 {
     TRACE_EVENT0("gpu.angle", "Renderer11::initializeDevice");
 
+    populateRenderer11DeviceCaps();
+
     mStateCache.initialize(mDevice);
     mInputLayoutCache.initialize(mDevice, mDeviceContext);
 
@@ -609,8 +612,6 @@ void Renderer11::initializeDevice()
     mCurVertexSRVs.resize(rendererCaps.maxVertexTextureImageUnits);
     mCurPixelSRVs.resize(rendererCaps.maxTextureImageUnits);
 
-    populateRenderer11DeviceCaps();
-
     markAllStateDirty();
 
     // Gather stats on DXGI and D3D feature level
@@ -647,6 +648,12 @@ void Renderer11::populateRenderer11DeviceCaps()
         }
     }
 
+    hr = mDevice->CheckFormatSupport(DXGI_FORMAT_B5G6R5_UNORM, &(mRenderer11DeviceCaps.B5G6R5support));
+    if (FAILED(hr))
+    {
+        mRenderer11DeviceCaps.B5G6R5support = 0;
+    }
+
     hr = mDevice->CheckFormatSupport(DXGI_FORMAT_B4G4R4A4_UNORM, &(mRenderer11DeviceCaps.B4G4R4A4support));
     if (FAILED(hr))
     {
@@ -654,13 +661,14 @@ void Renderer11::populateRenderer11DeviceCaps()
     }
 
     hr = mDevice->CheckFormatSupport(DXGI_FORMAT_B5G5R5A1_UNORM, &(mRenderer11DeviceCaps.B5G5R5A1support));
-    if (SUCCEEDED(hr))
+    if (FAILED(hr))
     {
         mRenderer11DeviceCaps.B5G5R5A1support = 0;
     }
 
     IDXGIAdapter2 *dxgiAdapter2 = d3d11::DynamicCastComObject<IDXGIAdapter2>(mDxgiAdapter);
     mRenderer11DeviceCaps.supportsDXGI1_2 = (dxgiAdapter2 != nullptr);
+    SafeRelease(dxgiAdapter2);
 }
 
 egl::ConfigSet Renderer11::generateConfigs() const
@@ -2258,8 +2266,6 @@ void Renderer11::markAllStateDirty()
     mForceSetScissor = true;
     mForceSetViewport = true;
 
-    mRenderToBackBufferActive = false;
-
     mAppliedIB = NULL;
     mAppliedIBFormat = DXGI_FORMAT_UNKNOWN;
     mAppliedIBOffset = 0;
@@ -3321,14 +3327,21 @@ gl::Error Renderer11::readTextureData(ID3D11Texture2D *texture, unsigned int sub
     D3D11_TEXTURE2D_DESC textureDesc;
     texture->GetDesc(&textureDesc);
 
+    gl::Rectangle actualArea = area;
+    bool invertForRenderToBackbuffer = mRenderToBackBufferEnabled && d3d11::IsBackbuffer(texture);
+    if (invertForRenderToBackbuffer)
+    {
+        actualArea.y = d3d11::InvertYAxis(textureDesc.Height, actualArea.y, actualArea.height);
+    }
+
     // Clamp read region to the defined texture boundaries, preventing out of bounds reads
     // and reads of uninitialized data.
     gl::Rectangle safeArea;
-    safeArea.x      = gl::clamp(area.x, 0, static_cast<int>(textureDesc.Width));
-    safeArea.y      = gl::clamp(area.y, 0, static_cast<int>(textureDesc.Height));
-    safeArea.width  = gl::clamp(area.width + std::min(area.x, 0), 0,
+    safeArea.x      = gl::clamp(actualArea.x, 0, static_cast<int>(textureDesc.Width));
+    safeArea.y      = gl::clamp(actualArea.y, 0, static_cast<int>(textureDesc.Height));
+    safeArea.width  = gl::clamp(actualArea.width + std::min(actualArea.x, 0), 0,
                                 static_cast<int>(textureDesc.Width) - safeArea.x);
-    safeArea.height = gl::clamp(area.height + std::min(area.y, 0), 0,
+    safeArea.height = gl::clamp(actualArea.height + std::min(actualArea.y, 0), 0,
                                 static_cast<int>(textureDesc.Height) - safeArea.y);
 
     ASSERT(safeArea.x >= 0 && safeArea.y >= 0);
@@ -3405,10 +3418,26 @@ gl::Error Renderer11::readTextureData(ID3D11Texture2D *texture, unsigned int sub
 
     SafeRelease(srcTex);
 
-    PackPixelsParams packParams(safeArea, format, type, outputPitch, pack, 0);
+    gl::PixelPackState actualPack;
+
+    // We can't just assign pack to actualPack, because that clones the ref count on pixelBuffer!
+    actualPack.alignment = pack.alignment;
+    actualPack.pixelBuffer.set(pack.pixelBuffer.get()); // Increments pack.pixelBuffer's ref count
+    actualPack.reverseRowOrder = pack.reverseRowOrder;
+
+    if (invertForRenderToBackbuffer)
+    {
+        actualPack.reverseRowOrder = !actualPack.reverseRowOrder;
+    }
+
+    PackPixelsParams packParams(safeArea, format, type, outputPitch, actualPack, 0);
     gl::Error error = packPixels(stagingTex, packParams, pixels);
 
     SafeRelease(stagingTex);
+
+    // The destructor of pixelBuffer's "smart" pointer doesn't release the object when actualPack goes out of scope, leaking the object!
+    // We therefore set the "smart" pointer back to NULL. This calls release on the actual pixelBuffer used in 'pack', preventing a leak.
+    actualPack.pixelBuffer.set(NULL);
 
     return error;
 }
