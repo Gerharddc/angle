@@ -1,8 +1,25 @@
-ANGLE -- ms-master branch
+ANGLE -- Microsoft Windows Store branch
 =====
 ANGLE allows Windows users to seamlessly run OpenGL ES content by efficiently translating 
-OpenGL ES API into DirectX 11 API calls. This repository contains a version of ANGLE focused 
-on helping you build great Windows apps.
+OpenGL ES API into DirectX 11 API calls.
+
+The ms-master branch in this repository is maintained by Microsoft to support 
+the use of ANGLE by Windows Store app developers. It contains:
+
+- A copy of ANGLE that is regularly updated from the ANGLE 
+  [master branch](https://code.google.com/p/angleproject)
+- Recent changes made by Microsoft that have not yet been merged back to ANGLE master 
+  _(our goal is to eventually merge everything, but if you want the latest and greatest 
+  Windows Store features, you will find them here first)_
+- [Documentation](https://github.com/MSOpenTech/angle/wiki) and 
+  [project templates](https://github.com/MSOpenTech/angle/tree/ms-master/templates) 
+  focused on Windows Store app development
+- Sample code and utilities such as 
+  [DDS](https://github.com/MSOpenTech/angle/wiki/Loading-textures-from-dds-files) and 
+  [WIC](https://github.com/MSOpenTech/angle/wiki/Loading-textures-from-image-files) 
+  texture loaders
+- This branch is the source for building the ANGLE binaries that we publish on 
+  [NuGet](https://www.nuget.org/packages/ANGLE.WindowsStore)
 
 ANGLE fully supports these C++ app types:
 - Universal Windows apps (Windows 10)
@@ -54,18 +71,14 @@ None
 </tr>
 </table>
 
-More Info
+Getting ANGLE
 =====
 
-For detailed information about ANGLE, please visit our wiki (found [here](https://github.com/MSOpenTech/angle/wiki)). Our wiki 
-contains lots of useful information about ANGLE, including:
+There are two ways to get ANGLE for Windows Store applications:
+  1. Download compiled ANGLE binaries as a [NuGet package](http://github.com/MSOpenTech/angle/wiki/How-To-Use-the-ANGLE-NuGet-Package)
+  2. Download and compile the ANGLE source code from this GitHub repository
 
-- Guides to help you get started with ANGLE in Windows apps
-- Tips and tricks to get good performance out of ANGLE
-- Sample code and documentation
-- And more!
-
-For a broad overview of ANGLE and how it works, please take a look at [//BUILD/ 2015 presentation](http://channel9.msdn.com/Events/Build/2015/3-686).
+Easy-to-use Visual Studio app templates are currently available for option 2 above. See the 'Quick Start' section below for more details.
 
 Requirements
 =====
@@ -78,7 +91,20 @@ Windows 8.1 and/or Windows Phone 8.1 Development:
 * Visual Studio Community 2013 (Update 4), or higher/later.
 * Windows 8.1 for local Windows development.
 
-Quick Start
+More Info
+=====
+
+For detailed information about ANGLE, please visit our wiki (found [here](https://github.com/MSOpenTech/angle/wiki)). Our wiki 
+contains lots of useful information about ANGLE, including:
+
+- Guides to help you get started with ANGLE in Windows apps
+- Tips and tricks to get good performance out of ANGLE
+- Sample code and documentation
+- And more!
+
+For a broad overview of ANGLE and how it works, please take a look at our [//BUILD/ 2015 presentation](http://channel9.msdn.com/Events/Build/2015/3-686).
+
+Quick Start (compiling from source)
 =====
 1. Clone or download ANGLE from our GitHub repository
 2. Install our easy-to-use Visual Studio templates by running install.bat in the /templates/ directory of your copy of ANGLE, or follow [these manual steps](https://github.com/MSOpenTech/angle/wiki/Installing-Templates).

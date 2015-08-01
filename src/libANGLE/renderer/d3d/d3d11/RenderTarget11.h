@@ -36,9 +36,6 @@ class RenderTarget11 : public RenderTargetD3D
 
 protected:
     bool mRenderToBackBuffer;
-
-  private:
-    D3D_FEATURE_LEVEL mFeatureLevel;
 };
 
 class TextureRenderTarget11 : public RenderTarget11

@@ -24,10 +24,11 @@ namespace rx
 
 SwapChain11::SwapChain11(Renderer11 *renderer, NativeWindow nativeWindow, HANDLE shareHandle,
                          GLenum backBufferFormat, GLenum depthBufferFormat, bool renderToBackBuffer)
-    : mRenderer(renderer),
-      SwapChainD3D(nativeWindow, shareHandle, backBufferFormat, depthBufferFormat),
+    : SwapChainD3D(nativeWindow, shareHandle, backBufferFormat, depthBufferFormat),
+      mRenderer(renderer),
       mColorRenderTarget(this, renderer, false, renderToBackBuffer),
-      mDepthStencilRenderTarget(this, renderer, true, false)
+      mDepthStencilRenderTarget(this, renderer, true, false),
+      mPassThroughResourcesInit(false)
 {
     mSwapChain = NULL;
     mSwapChain1 = nullptr;
@@ -48,7 +49,6 @@ SwapChain11::SwapChain11(Renderer11 *renderer, NativeWindow nativeWindow, HANDLE
     mHeight = -1;
     mSwapInterval = 0;
     mAppCreatedShareHandle = mShareHandle != NULL;
-    mPassThroughResourcesInit = false;
     mRenderToBackBuffer = renderToBackBuffer;
 }
 
@@ -118,8 +118,8 @@ EGLint SwapChain11::resetOffscreenTexture(int backbufferWidth, int backbufferHei
 
     releaseOffscreenTexture();
 
-    HRESULT result = S_OK;
-    const d3d11::TextureFormat &backbufferFormatInfo = d3d11::GetTextureFormatInfo(mBackBufferFormat, mRenderer->getRenderer11DeviceCaps(), true);
+    HRESULT result;
+    const d3d11::TextureFormat &backbufferFormatInfo = d3d11::GetTextureFormatInfo(mOffscreenRenderTargetFormat, mRenderer->getRenderer11DeviceCaps(), true);
 
     if (!mRenderToBackBuffer)
     {
@@ -370,8 +370,7 @@ EGLint SwapChain11::resize(EGLint backbufferWidth, EGLint backbufferHeight)
         return EGL_BAD_ALLOC;
     }
 
-    const d3d11::TextureFormat &backbufferFormatInfo = d3d11::GetTextureFormatInfo(mBackBufferFormat, mRenderer->getRenderer11DeviceCaps(), true);
-    result = mSwapChain->ResizeBuffers(desc.BufferCount, backbufferWidth, backbufferHeight, backbufferFormatInfo.texFormat, 0);
+    result = mSwapChain->ResizeBuffers(desc.BufferCount, backbufferWidth, backbufferHeight, getSwapChainNativeFormat(), 0);
 
     if (FAILED(result))
     {
@@ -403,6 +402,13 @@ EGLint SwapChain11::resize(EGLint backbufferWidth, EGLint backbufferHeight)
     }
 
     return resetOffscreenTexture(backbufferWidth, backbufferHeight);
+}
+
+DXGI_FORMAT SwapChain11::getSwapChainNativeFormat() const
+{
+    // Return a render target format for offscreen rendering is supported by IDXGISwapChain.
+    // MSDN https://msdn.microsoft.com/en-us/library/windows/desktop/bb173064(v=vs.85).aspx
+    return (mOffscreenRenderTargetFormat == GL_BGRA8_EXT) ? DXGI_FORMAT_B8G8R8A8_UNORM : DXGI_FORMAT_R8G8B8A8_UNORM;
 }
 
 EGLint SwapChain11::reset(int backbufferWidth, int backbufferHeight, EGLint swapInterval)
@@ -438,10 +444,8 @@ EGLint SwapChain11::reset(int backbufferWidth, int backbufferHeight, EGLint swap
 
     if (mNativeWindow.getNativeWindow())
     {
-        const d3d11::TextureFormat &backbufferFormatInfo = d3d11::GetTextureFormatInfo(mBackBufferFormat, mRenderer->getRenderer11DeviceCaps(), true);
-
         HRESULT result = mNativeWindow.createSwapChain(device, mRenderer->getDxgiFactory(),
-                                               backbufferFormatInfo.texFormat,
+                                               getSwapChainNativeFormat(),
                                                backbufferWidth, backbufferHeight, &mSwapChain);
 
         if (FAILED(result))
@@ -473,18 +477,16 @@ EGLint SwapChain11::reset(int backbufferWidth, int backbufferHeight, EGLint swap
         d3d11::SetDebugName(mBackBufferRTView, "Back buffer render target");
     }
 
-    // If we are resizing the swap chain, we don't wish to recreate all the static resources
-    if (!mPassThroughResourcesInit)
-    {
-        mPassThroughResourcesInit = true;
-        initPassThroughResources();
-    }
-
     return resetOffscreenTexture(backbufferWidth, backbufferHeight);
 }
 
 void SwapChain11::initPassThroughResources()
 {
+    if (mPassThroughResourcesInit)
+    {
+        return;
+    }
+
     TRACE_EVENT0("gpu.angle", "SwapChain11::initPassThroughResources");
 
     if (mRenderToBackBuffer)
@@ -549,6 +551,8 @@ void SwapChain11::initPassThroughResources()
     result = device->CreatePixelShader(g_PS_PassthroughRGBA2D, sizeof(g_PS_PassthroughRGBA2D), NULL, &mPassThroughPS);
     ASSERT(SUCCEEDED(result));
     d3d11::SetDebugName(mPassThroughPS, "Swap chain pass through pixel shader");
+
+    mPassThroughResourcesInit = true;
 }
 
 // parameters should be validated/clamped by caller
@@ -571,6 +575,7 @@ EGLint SwapChain11::swapRect(EGLint x, EGLint y, EGLint width, EGLint height)
     }
 
     HRESULT result = S_OK;
+    initPassThroughResources();
 
     ID3D11Device *device = mRenderer->getDevice();
 
@@ -646,6 +651,14 @@ EGLint SwapChain11::swapRect(EGLint x, EGLint y, EGLint width, EGLint height)
         deviceContext->Draw(4, 0);
     }
 
+    // Rendering to the swapchain is now complete. Now we can call Present().
+    // Before that, we perform any cleanup on the D3D device. We do this before Present() to make sure the
+    // cleanup is caught under the current eglSwapBuffers() PIX/Graphics Diagnostics call rather than the next one.
+    mRenderer->setShaderResource(gl::SAMPLER_PIXEL, 0, NULL);
+
+    mRenderer->unapplyRenderTargets();
+    mRenderer->markAllStateDirty();
+
 #if ANGLE_VSYNC == ANGLE_DISABLED
     result = mSwapChain->Present(0, 0);
 #else
@@ -682,12 +695,6 @@ EGLint SwapChain11::swapRect(EGLint x, EGLint y, EGLint width, EGLint height)
     {
         ERR("Present failed with error code 0x%08X", result);
     }
-
-    // Unbind
-    mRenderer->setShaderResource(gl::SAMPLER_PIXEL, 0, NULL);
-
-    mRenderer->unapplyRenderTargets();
-    mRenderer->markAllStateDirty();
 
     return EGL_SUCCESS;
 }

@@ -115,8 +115,8 @@ class Renderer11 : public RendererD3D
     virtual gl::Error setTexture(gl::SamplerType type, int index, gl::Texture *texture);
 
     gl::Error setUniformBuffers(const gl::Data &data,
-                                const GLint vertexUniformBuffers[],
-                                const GLint fragmentUniformBuffers[]) override;
+                                const std::vector<GLint> &vertexUniformBuffers,
+                                const std::vector<GLint> &fragmentUniformBuffers) override;
 
     virtual gl::Error setRasterizerState(const gl::RasterizerState &rasterState);
     gl::Error setBlendState(const gl::Framebuffer *framebuffer, const gl::BlendState &blendState, const gl::ColorF &blendColor,
@@ -134,13 +134,14 @@ class Renderer11 : public RendererD3D
                                    bool rasterizerDiscard, bool transformFeedbackActive);
 
     virtual gl::Error applyUniforms(const ProgramImpl &program, const std::vector<gl::LinkedUniform*> &uniformArray);
-    virtual gl::Error applyVertexBuffer(const gl::State &state, GLenum mode, GLint first, GLsizei count, GLsizei instances);
-    virtual gl::Error applyIndexBuffer(const GLvoid *indices, gl::Buffer *elementArrayBuffer, GLsizei count, GLenum mode, GLenum type, TranslatedIndexData *indexInfo);
+    virtual gl::Error applyVertexBuffer(const gl::State &state, GLenum mode, GLint first, GLsizei count, GLsizei instances, SourceIndexData *sourceIndexInfo);
+    virtual gl::Error applyIndexBuffer(const GLvoid *indices, gl::Buffer *elementArrayBuffer, GLsizei count, GLenum mode, GLenum type, TranslatedIndexData *indexInfo, SourceIndexData *sourceIndexInfo);
     void applyTransformFeedbackBuffers(const gl::State &state) override;
 
     gl::Error drawArrays(const gl::Data &data, GLenum mode, GLsizei count, GLsizei instances, bool usesPointSize) override;
     virtual gl::Error drawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices,
-                                   gl::Buffer *elementArrayBuffer, const TranslatedIndexData &indexInfo, GLsizei instances);
+                                   gl::Buffer *elementArrayBuffer, const TranslatedIndexData &indexInfo, GLsizei instances,
+                                   bool usesPointSize);
 
     virtual void markAllStateDirty();
 
@@ -150,7 +151,7 @@ class Renderer11 : public RendererD3D
 
     VendorID getVendorId() const override;
     std::string getRendererDescription() const override;
-    GUID getAdapterIdentifier() const override;
+    DeviceIdentifier getAdapterIdentifier() const override;
 
     virtual unsigned int getReservedVertexUniformVectors() const;
     virtual unsigned int getReservedFragmentUniformVectors() const;
@@ -266,11 +267,19 @@ class Renderer11 : public RendererD3D
     const Renderer11DeviceCaps &getRenderer11DeviceCaps() { return mRenderer11DeviceCaps; };
 
     RendererClass getRendererClass() const override { return RENDERER_D3D11; }
+    InputLayoutCache *getInputLayoutCache() { return &mInputLayoutCache; }
 
-    virtual bool usesDifferentFormatForRenderableTexture(GLenum internalFormat) override;
+    bool usesAlternateRenderableFormat(GLenum internalFormat) override;
+
+  protected:
+    void createAnnotator() override;
+    gl::Error clearTextures(gl::SamplerType samplerType, size_t rangeStart, size_t rangeEnd) override;
 
   private:
-    void generateCaps(gl::Caps *outCaps, gl::TextureCapsMap *outTextureCaps, gl::Extensions *outExtensions) const override;
+    void generateCaps(gl::Caps *outCaps, gl::TextureCapsMap *outTextureCaps,
+                      gl::Extensions *outExtensions,
+                      gl::Limitations *outLimitations) const override;
+
     Workarounds generateWorkarounds() const override;
 
     gl::Error drawLineLoop(GLsizei count, GLenum type, const GLvoid *indices, int minIndex, gl::Buffer *elementArrayBuffer);
@@ -323,8 +332,41 @@ class Renderer11 : public RendererD3D
         uintptr_t resource;
         D3D11_SHADER_RESOURCE_VIEW_DESC desc;
     };
-    std::vector<SRVRecord> mCurVertexSRVs;
-    std::vector<SRVRecord> mCurPixelSRVs;
+
+    // A cache of current SRVs that also tracks the highest 'used' (non-NULL) SRV
+    // We might want to investigate a more robust approach that is also fast when there's
+    // a large gap between used SRVs (e.g. if SRV 0 and 7 are non-NULL, this approach will
+    // waste time on SRVs 1-6.)
+    class SRVCache : angle::NonCopyable
+    {
+      public:
+        SRVCache()
+            : mHighestUsedSRV(0)
+        {
+        }
+
+        void initialize(size_t size)
+        {
+            mCurrentSRVs.resize(size);
+        }
+
+        size_t size() const { return mCurrentSRVs.size(); }
+        size_t highestUsed() const { return mHighestUsedSRV; }
+
+        const SRVRecord &operator[](size_t index) const { return mCurrentSRVs[index]; }
+        void clear();
+        void update(size_t resourceIndex, ID3D11ShaderResourceView *srv);
+
+      private:
+        std::vector<SRVRecord> mCurrentSRVs;
+        size_t mHighestUsedSRV;
+    };
+
+    SRVCache mCurVertexSRVs;
+    SRVCache mCurPixelSRVs;
+
+    // A block of NULL pointers, cached so we don't re-allocate every draw call
+    std::vector<ID3D11ShaderResourceView*> mNullSRVs;
 
     // Currently applied blend state
     bool mForceSetBlendState;
@@ -363,6 +405,7 @@ class Renderer11 : public RendererD3D
     ID3D11Buffer *mAppliedIB;
     DXGI_FORMAT mAppliedIBFormat;
     unsigned int mAppliedIBOffset;
+    bool mAppliedIBChanged;
 
     // Currently applied transform feedback buffers
     size_t mAppliedNumXFBBindings;
@@ -428,8 +471,6 @@ class Renderer11 : public RendererD3D
     char mDescription[128];
     DXGIFactory *mDxgiFactory;
     ID3D11Debug *mDebug;
-
-    DebugAnnotator11 mAnnotator;
 };
 
 }

@@ -58,7 +58,7 @@ GLuint TextureCaps::getNearestSamples(GLuint requestedSamples) const
 
 void TextureCapsMap::insert(GLenum internalFormat, const TextureCaps &caps)
 {
-    mCapsMap.insert(std::make_pair(internalFormat, caps));
+    mCapsMap[internalFormat] = caps;
 }
 
 void TextureCapsMap::remove(GLenum internalFormat)
@@ -111,9 +111,9 @@ Extensions::Extensions()
       textureCompressionDXT3(false),
       textureCompressionDXT5(false),
       depthTextures(false),
+      textureStorage(false),
       textureNPOT(false),
       drawBuffers(false),
-      textureStorage(false),
       textureFilterAnisotropic(false),
       maxTextureAnisotropy(false),
       occlusionQueryBoolean(false),
@@ -135,6 +135,7 @@ Extensions::Extensions()
       translatedShaderSource(false),
       fboRenderMipmap(false),
       discardFramebuffer(false),
+      debugMarker(false),
       colorBufferFloat(false)
 {
 }
@@ -186,9 +187,17 @@ std::vector<std::string> Extensions::getStrings() const
     InsertExtensionString("GL_ANGLE_translated_shader_source", translatedShaderSource,   &extensionStrings);
     InsertExtensionString("GL_OES_fbo_render_mipmap",          fboRenderMipmap,          &extensionStrings);
     InsertExtensionString("GL_EXT_discard_framebuffer",        discardFramebuffer,       &extensionStrings);
+    InsertExtensionString("GL_EXT_debug_marker",               debugMarker,              &extensionStrings);
     InsertExtensionString("GL_EXT_color_buffer_float",         colorBufferFloat,         &extensionStrings);
 
     return extensionStrings;
+}
+
+Limitations::Limitations()
+    : noFrontFacingSupport(false),
+      noSampleAlphaToCoverageSupport(false),
+      attributeZeroRequiresZeroDivisorInEXT(false)
+{
 }
 
 static bool GetFormatSupport(const TextureCapsMap &textureCaps, const std::vector<GLenum> &requiredFormats,
@@ -215,6 +224,15 @@ static bool GetFormatSupport(const TextureCapsMap &textureCaps, const std::vecto
     }
 
     return true;
+}
+
+// Check for GL_OES_packed_depth_stencil
+static bool DeterminePackedDepthStencilSupport(const TextureCapsMap &textureCaps)
+{
+    std::vector<GLenum> requiredFormats;
+    requiredFormats.push_back(GL_DEPTH24_STENCIL8);
+
+    return GetFormatSupport(textureCaps, requiredFormats, false, false, true);
 }
 
 // Checks for GL_OES_rgb8_rgba8 support
@@ -366,6 +384,7 @@ static bool DetermineColorBufferFloatSupport(const TextureCapsMap &textureCaps)
 
 void Extensions::setTextureExtensionSupport(const TextureCapsMap &textureCaps)
 {
+    packedDepthStencil = DeterminePackedDepthStencilSupport(textureCaps);
     rgb8rgba8 = DetermineRGB8AndRGBA8TextureSupport(textureCaps);
     textureFormatBGRA8888 = DetermineBGRA8TextureSupport(textureCaps);
     textureHalfFloat = DetermineHalfFloatTextureSupport(textureCaps);

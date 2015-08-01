@@ -148,7 +148,6 @@ gl::Error Framebuffer11::discard(size_t count, const GLenum *attachments)
 gl::Error Framebuffer11::invalidateBase(size_t count, const GLenum *attachments, bool useEXTBehavior) const
 {
     ID3D11DeviceContext1 *deviceContext1 = mRenderer->getDeviceContext1IfSupported();
-    const FLOAT clearColor[4] = { 0.123f, 0.456f, 0.789f, 0.987f };
 
     if (!deviceContext1)
     {
@@ -208,8 +207,6 @@ gl::Error Framebuffer11::invalidateBase(size_t count, const GLenum *attachments,
 
                     if (colorView != nullptr)
                     {
-                        deviceContext1->ClearView(colorView, clearColor, NULL, 0);
-                        deviceContext1->Flush();
                         deviceContext1->DiscardView(colorView);
                     }
                 }
@@ -258,8 +255,6 @@ gl::Error Framebuffer11::invalidateBase(size_t count, const GLenum *attachments,
 
         if (depthView != nullptr)
         {
-            deviceContext1->ClearView(depthView, clearColor, NULL, 0);
-            deviceContext1->Flush();
             deviceContext1->DiscardView(depthView);
         }
     }
@@ -280,8 +275,6 @@ gl::Error Framebuffer11::invalidateBase(size_t count, const GLenum *attachments,
 
         if (stencilView != nullptr)
         {
-            deviceContext1->ClearView(stencilView, clearColor, NULL, 0);
-            deviceContext1->Flush();
             deviceContext1->DiscardView(stencilView);
         }
     }
@@ -372,7 +365,23 @@ gl::Error Framebuffer11::blit(const gl::Rectangle &sourceArea, const gl::Rectang
                 }
                 ASSERT(drawRenderTarget);
 
-                error = mRenderer->blitRenderbufferRect(sourceArea, destArea, readRenderTarget, drawRenderTarget,
+                gl::Rectangle actualSourceArea = sourceArea;
+                RenderTarget11 *readRenderTarget11 = GetAs<RenderTarget11>(readRenderTarget);
+                if (readRenderTarget11->renderToBackBuffer())
+                {
+                    actualSourceArea.y = readRenderTarget11->getHeight() - sourceArea.y;
+                    actualSourceArea.height = -sourceArea.height;
+                }
+
+                gl::Rectangle actualDestArea = destArea;
+                RenderTarget11 *drawRenderTarget11 = GetAs<RenderTarget11>(drawRenderTarget);
+                if (drawRenderTarget11->renderToBackBuffer())
+                {
+                    actualDestArea.y = drawRenderTarget11->getHeight() - destArea.y;
+                    actualDestArea.height = -destArea.height;
+                }
+
+                error = mRenderer->blitRenderbufferRect(actualSourceArea, actualDestArea, readRenderTarget, drawRenderTarget,
                                                         filter, scissor, blitRenderTarget, false, false);
                 if (error.isError())
                 {

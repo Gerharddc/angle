@@ -34,19 +34,22 @@ Framebuffer9::~Framebuffer9()
 
 gl::Error Framebuffer9::discard(size_t, const GLenum *)
 {
-    // No-op in D3D9
+    // Extension not implemented in D3D9 renderer
+    UNREACHABLE();
     return gl::Error(GL_NO_ERROR);
 }
 
 gl::Error Framebuffer9::invalidate(size_t, const GLenum *)
 {
-    // No-op in D3D9
+    // Shouldn't ever reach here in D3D9
+    UNREACHABLE();
     return gl::Error(GL_NO_ERROR);
 }
 
 gl::Error Framebuffer9::invalidateSub(size_t, const GLenum *, const gl::Rectangle &)
 {
-    // No-op in D3D9
+    // Shouldn't ever reach here in D3D9
+    UNREACHABLE();
     return gl::Error(GL_NO_ERROR);
 }
 

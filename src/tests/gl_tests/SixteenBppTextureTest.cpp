@@ -26,7 +26,7 @@ class SixteenBppTextureTest : public ANGLETest
         setConfigAlphaBits(8);
     }
 
-    virtual void SetUp()
+    void SetUp() override
     {
         ANGLETest::SetUp();
 
@@ -59,7 +59,7 @@ class SixteenBppTextureTest : public ANGLETest
         mTexture2DUniformLocation = glGetUniformLocation(m2DProgram, "tex");
     }
 
-    virtual void TearDown()
+    void TearDown() override
     {
         glDeleteProgram(m2DProgram);
 
@@ -136,6 +136,15 @@ class SixteenBppTextureTest : public ANGLETest
 // Samples from the texture, renders to it, generates mipmaps etc.
 TEST_P(SixteenBppTextureTest, RGB565Validation)
 {
+    // These tests fail on certain Intel machines running an un-updated version of Win7
+    // The tests pass after installing the latest updates from Windows Update.
+    // TODO: reenable these tests once the bots have been updated
+    if (isIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    {
+        std::cout << "Test skipped on Intel D3D11." << std::endl;
+        return;
+    }
+
     GLushort pixels[4] =
     {
         0xF800, // Red
@@ -168,6 +177,15 @@ TEST_P(SixteenBppTextureTest, RGB565Validation)
 // Samples from the texture, renders to it, generates mipmaps etc.
 TEST_P(SixteenBppTextureTest, RGBA5551Validation)
 {
+    // These tests fail on certain Intel machines running an un-updated version of Win7
+    // The tests pass after installing the latest updates from Windows Update.
+    // TODO: reenable these tests once the bots have been updated
+    if (isIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    {
+        std::cout << "Test skipped on Intel D3D11." << std::endl;
+        return;
+    }
+
     GLushort pixels[4] =
     {
         0xF801, // Red
@@ -197,6 +215,15 @@ TEST_P(SixteenBppTextureTest, RGBA5551Validation)
 // Based on WebGL test conformance/textures/texture-attachment-formats.html
 TEST_P(SixteenBppTextureTest, RGBA5551ClearAlpha)
 {
+    // These tests fail on certain Intel machines running an un-updated version of Win7
+    // The tests pass after installing the latest updates from Windows Update.
+    // TODO: reenable these tests once the bots have been updated
+    if (isIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    {
+        std::cout << "Test skipped on Intel D3D11." << std::endl;
+        return;
+    }
+
     GLuint tex = 0;
     GLuint fbo = 0;
     GLubyte pixel[4];
@@ -234,6 +261,15 @@ TEST_P(SixteenBppTextureTest, RGBA5551ClearAlpha)
 // Samples from the texture, renders to it, generates mipmaps etc.
 TEST_P(SixteenBppTextureTest, RGBA4444Validation)
 {
+    // These tests fail on certain Intel machines running an un-updated version of Win7
+    // The tests pass after installing the latest updates from Windows Update.
+    // TODO: reenable these tests once the bots have been updated
+    if (isIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    {
+        std::cout << "Test skipped on Intel D3D11." << std::endl;
+        return;
+    }
+
     GLushort pixels[4] =
     {
         0xF00F, // Red

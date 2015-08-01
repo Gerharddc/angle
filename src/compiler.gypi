@@ -80,10 +80,12 @@
             'compiler/translator/Pragma.h',
             'compiler/translator/PruneEmptyDeclarations.cpp',
             'compiler/translator/PruneEmptyDeclarations.h',
-            'compiler/translator/QualifierAlive.cpp',
-            'compiler/translator/QualifierAlive.h',
+            'compiler/translator/RecordConstantPrecision.cpp',
+            'compiler/translator/RecordConstantPrecision.h',
             'compiler/translator/RegenerateStructNames.cpp',
             'compiler/translator/RegenerateStructNames.h',
+            'compiler/translator/RemovePow.cpp',
+            'compiler/translator/RemovePow.h',
             'compiler/translator/RenameFunction.h',
             'compiler/translator/ScalarizeVecAndMatConstructorArgs.cpp',
             'compiler/translator/ScalarizeVecAndMatConstructorArgs.h',
@@ -129,7 +131,6 @@
             'compiler/translator/glslang_tab.cpp',
             'compiler/translator/glslang_tab.h',
             'compiler/translator/intermOut.cpp',
-            'compiler/translator/intermediate.h',
             'compiler/translator/length_limits.h',
             'compiler/translator/parseConst.cpp',
             'compiler/translator/timing/RestrictFragmentShaderTiming.cpp',
@@ -161,8 +162,8 @@
             'compiler/translator/SeparateArrayInitialization.h',
             'compiler/translator/SeparateDeclarations.cpp',
             'compiler/translator/SeparateDeclarations.h',
-            'compiler/translator/SimplifyArrayAssignment.cpp',
-            'compiler/translator/SimplifyArrayAssignment.h',
+            'compiler/translator/SeparateExpressionsReturningArrays.cpp',
+            'compiler/translator/SeparateExpressionsReturningArrays.h',
             'compiler/translator/StructureHLSL.cpp',
             'compiler/translator/StructureHLSL.h',
             'compiler/translator/TranslatorHLSL.cpp',
@@ -220,6 +221,7 @@
                 {
                     'msvs_enable_winrt' : '1',
                     'msvs_application_type_revision' : '<(angle_build_winrt_app_type_revision)',
+                    'msvs_target_platform_version' : '<(angle_build_winrt_target_platform_ver)',
                 }],
                 ['angle_build_winphone==1',
                 {
@@ -260,6 +262,7 @@
                 {
                     'msvs_enable_winrt' : '1',
                     'msvs_application_type_revision' : '<(angle_build_winrt_app_type_revision)',
+                    'msvs_target_platform_version' : '<(angle_build_winrt_target_platform_ver)',
                 }],
                 ['angle_build_winphone==1',
                 {
@@ -311,6 +314,7 @@
                 {
                     'msvs_enable_winrt' : '1',
                     'msvs_application_type_revision' : '<(angle_build_winrt_app_type_revision)',
+                    'msvs_target_platform_version' : '<(angle_build_winrt_target_platform_ver)',
                 }],
                 ['angle_build_winphone==1',
                 {
@@ -351,6 +355,7 @@
                 {
                     'msvs_enable_winrt' : '1',
                     'msvs_application_type_revision' : '<(angle_build_winrt_app_type_revision)',
+                    'msvs_target_platform_version' : '<(angle_build_winrt_target_platform_ver)',
                 }],
                 ['angle_build_winphone==1',
                 {

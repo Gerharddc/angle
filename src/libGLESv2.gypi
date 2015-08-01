@@ -8,14 +8,20 @@
         # These file lists are shared with the GN build.
         'libangle_common_sources':
         [
+            'common/Float16ToFloat32.cpp',
             'common/MemoryBuffer.cpp',
             'common/MemoryBuffer.h',
             'common/Optional.h',
             'common/angleutils.cpp',
             'common/angleutils.h',
+            'common/debug.cpp',
+            'common/debug.h',
             'common/mathutil.cpp',
             'common/mathutil.h',
+            'common/matrix_utils.h',
             'common/platform.h',
+            'common/string_utils.cpp',
+            'common/string_utils.h',
             'common/tls.cpp',
             'common/tls.h',
             'common/utilities.cpp',
@@ -42,8 +48,6 @@
         ],
         'libangle_sources':
         [
-            'common/debug.cpp', # D3D9/D3D11 debug annotations need debug.cpp/h in libANGLE to work
-            'common/debug.h',   # TODO: refactor debug.cpp so it can be moved into libangle_common
             'common/event_tracer.cpp',
             'common/event_tracer.h',
             'libANGLE/AttributeMap.cpp',
@@ -71,7 +75,6 @@
             'libANGLE/Error.inl',
             'libANGLE/Fence.cpp',
             'libANGLE/Fence.h',
-            'libANGLE/Float16ToFloat32.cpp',
             'libANGLE/Framebuffer.cpp',
             'libANGLE/Framebuffer.h',
             'libANGLE/FramebufferAttachment.cpp',
@@ -107,6 +110,8 @@
             'libANGLE/TransformFeedback.h',
             'libANGLE/Uniform.cpp',
             'libANGLE/Uniform.h',
+            'libANGLE/Version.h',
+            'libANGLE/Version.inl',
             'libANGLE/VertexArray.cpp',
             'libANGLE/VertexArray.h',
             'libANGLE/VertexAttribute.cpp',
@@ -271,6 +276,8 @@
             'libANGLE/renderer/d3d/d3d11/copyvertex.inl',
             'libANGLE/renderer/d3d/d3d11/DebugAnnotator11.cpp',
             'libANGLE/renderer/d3d/d3d11/DebugAnnotator11.h',
+            'libANGLE/renderer/d3d/d3d11/dxgi_support_table.cpp',
+            'libANGLE/renderer/d3d/d3d11/dxgi_support_table.h',
             'libANGLE/renderer/d3d/d3d11/Fence11.cpp',
             'libANGLE/renderer/d3d/d3d11/Fence11.h',
             'libANGLE/renderer/d3d/d3d11/formatutils11.cpp',
@@ -504,10 +511,6 @@
             ],
             'defines':
             [
-                'GL_APICALL=',
-                'GL_GLEXT_PROTOTYPES=',
-                'EGLAPI=',
-                'ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES={ "d3dcompiler_47.dll", "d3dcompiler_46.dll", "d3dcompiler_43.dll" }',
                 'LIBANGLE_IMPLEMENTATION',
             ],
             'direct_dependent_settings':
@@ -519,13 +522,24 @@
                 ],
                 'defines':
                 [
-                    'GL_APICALL=',
                     'GL_GLEXT_PROTOTYPES=',
-                    'EGLAPI=',
                     'ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES={ "d3dcompiler_47.dll", "d3dcompiler_46.dll", "d3dcompiler_43.dll" }',
                 ],
                 'conditions':
                 [
+                    ['OS=="win"', {
+                        'defines':
+                        [
+                            'GL_APICALL=',
+                            'EGLAPI=',
+                        ],
+                    }, {
+                        'defines':
+                        [
+                            'GL_APICALL=__attribute__((visibility("default")))',
+                            'EGLAPI=__attribute__((visibility("default")))',
+                        ],
+                    }],
                     ['angle_enable_d3d9==1',
                     {
                         'defines':
@@ -545,6 +559,16 @@
                         'defines':
                         [
                             'ANGLE_ENABLE_OPENGL',
+                        ],
+                        'conditions':
+                        [
+                            ['angle_use_glx==1',
+                            {
+                                'defines':
+                                [
+                                    'ANGLE_USE_X11',
+                                ]
+                            }],
                         ],
                     }],
                 ],
@@ -656,8 +680,12 @@
                                 '<@(libangle_gl_wgl_sources)',
                             ],
                         }],
-                        ['OS=="linux"',
+                        ['angle_use_glx==1',
                         {
+                            'defines':
+                            [
+                                'ANGLE_USE_X11',
+                            ],
                             'sources':
                             [
                                 '<@(libangle_gl_glx_sources)',
@@ -680,6 +708,7 @@
                     ],
                     'msvs_enable_winrt' : '1',
                     'msvs_application_type_revision' : '<(angle_build_winrt_app_type_revision)',
+                    'msvs_target_platform_version' : '<(angle_build_winrt_target_platform_ver)',
                     'msvs_requires_importlibrary' : 'true',
                     'msvs_settings':
                     {
@@ -700,10 +729,10 @@
                     {
                         'Debug_Base':
                         {
+                            'abstract': 1,
                             'defines':
                             [
-                                'ANGLE_ENABLE_DEBUG_ANNOTATIONS',
-                                'ANGLE_GENERATE_SHADER_DEBUG_INFO'
+                                'ANGLE_ENABLE_DEBUG_ANNOTATIONS'
                             ],
                         },
                     },
@@ -721,9 +750,6 @@
             ],
             'defines':
             [
-                'GL_APICALL=',
-                'GL_GLEXT_PROTOTYPES=',
-                'EGLAPI=',
                 'LIBGLESV2_IMPLEMENTATION',
             ],
             'conditions':
@@ -732,6 +758,7 @@
                 {
                     'msvs_enable_winrt' : '1',
                     'msvs_application_type_revision' : '<(angle_build_winrt_app_type_revision)',
+                    'msvs_target_platform_version' : '<(angle_build_winrt_target_platform_ver)',
                     'msvs_requires_importlibrary' : 'true',
                     'msvs_settings':
                     {
@@ -746,20 +773,7 @@
                 {
                     'msvs_enable_winphone' : '1',
                 }],
-                ['OS=="win"',
-                {
-                    'configurations':
-                    {
-                        'Debug_Base':
-                        {
-                            'defines':
-                            [
-                                'ANGLE_ENABLE_DEBUG_ANNOTATIONS',
-                            ],
-                        },
-                    },
-                }],
-                ['OS=="linux"',
+                ['angle_use_glx==1',
                 {
                     'link_settings': {
                         'ldflags': [
@@ -768,6 +782,20 @@
                         'libraries': [
                             '<!@(pkg-config --libs-only-l x11 xi) -ldl',
                         ],
+                    },
+                }],
+                ['OS=="win"',
+                {
+                    'configurations':
+                    {
+                        'Debug_Base':
+                        {
+                            'abstract': 1,
+                            'defines':
+                            [
+                                'ANGLE_ENABLE_DEBUG_ANNOTATIONS'
+                            ],
+                        },
                     },
                 }],
             ],

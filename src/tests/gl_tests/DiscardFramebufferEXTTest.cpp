@@ -4,7 +4,7 @@
 // found in the LICENSE file.
 //
 
-#include "end2end_tests/ANGLETest.h"
+#include "test_utils/ANGLETest.h"
 
 using namespace angle;
 
@@ -26,10 +26,15 @@ protected:
 
 TEST_P(DiscardFramebufferEXTTest, ExtensionEnabled)
 {
-    EGLPlatformParameters platform = GetParam().mEGLPlatformParameters;
+    EGLPlatformParameters platform = GetParam().eglParameters;
 
     if (platform.renderer == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
     {
+        // EXPECT_TRUE(extensionEnabled("EXT_discard_framebuffer"));
+
+        // EXT_discard_framebuffer is disabled in D3D11 ANGLE due to Chromium BUG:497445
+        // Enabling this extension (even as a no-op) causes WebGL video failures in Chromium
+        // Once this bug is fixed, we can reenable the extension.
         EXPECT_TRUE(extensionEnabled("EXT_discard_framebuffer"));
     }
     else
@@ -99,7 +104,7 @@ TEST_P(DiscardFramebufferEXTTest, NonDefaultFramebuffer)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex2D, 0);
-    ASSERT_EQ(glCheckFramebufferStatus(GL_FRAMEBUFFER), GL_FRAMEBUFFER_COMPLETE);
+    ASSERT_GLENUM_EQ(GL_FRAMEBUFFER_COMPLETE, glCheckFramebufferStatus(GL_FRAMEBUFFER));
 
     // These should fail on the non-default framebuffer
     const GLenum discards1[] = { GL_COLOR_EXT };

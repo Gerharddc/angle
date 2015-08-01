@@ -320,7 +320,7 @@ static bool OnlyFL9_3(const Renderer11DeviceCaps &deviceCaps, bool /* renderable
     return (deviceCaps.featureLevel == D3D_FEATURE_LEVEL_9_3);
 }
 
-template <DXGI_FORMAT format, bool requireFullSupport>
+template <DXGI_FORMAT format, bool requireSupport>
 static bool SupportsFormat(const Renderer11DeviceCaps &deviceCaps, bool /* renderable */)
 {
     // Must support texture, SRV and RTV support
@@ -354,7 +354,7 @@ static bool SupportsFormat(const Renderer11DeviceCaps &deviceCaps, bool /* rende
     }
 
     // This 'SupportsFormat' function is used by individual entries in the D3D11 Format Map below, which maps GL formats to DXGI formats.
-    if (requireFullSupport)
+    if (requireSupport)
     {
         // This means that ANGLE would like to use the entry in the map if the inputted DXGI format *IS* supported.
         // e.g. the entry might map GL_RGB5_A1 to DXGI_FORMAT_B5G5R5A1, which should only be used if DXGI_FORMAT_B5G5R5A1 is supported.
@@ -390,23 +390,26 @@ static bool OnlyPartialB4G4R4A4(const Renderer11DeviceCaps &deviceCaps, bool ren
 
     UINT cannotSupport = D3D11_FORMAT_SUPPORT_RENDER_TARGET;
 
-    UINT mustSupport = D3D11_FORMAT_SUPPORT_TEXTURE2D | D3D11_FORMAT_SUPPORT_TEXTURECUBE
-                       | D3D11_FORMAT_SUPPORT_SHADER_SAMPLE | D3D11_FORMAT_SUPPORT_MIP;
+    UINT mustSupport = D3D11_FORMAT_SUPPORT_TEXTURE2D | D3D11_FORMAT_SUPPORT_TEXTURECUBE |
+                       D3D11_FORMAT_SUPPORT_SHADER_SAMPLE | D3D11_FORMAT_SUPPORT_MIP;
 
     if (d3d11_gl::GetMaximumClientVersion(deviceCaps.featureLevel) > 2)
     {
         mustSupport |= D3D11_FORMAT_SUPPORT_TEXTURE3D;
     }
 
-    return ((deviceCaps.B4G4R4A4support & mustSupport) == mustSupport)
-           && ((deviceCaps.B4G4R4A4support & cannotSupport) == 0);
+    return ((deviceCaps.B4G4R4A4support & mustSupport) == mustSupport) &&
+           ((deviceCaps.B4G4R4A4support & cannotSupport) == 0);
 }
 
 static bool NoB4G4R4A4Support(const Renderer11DeviceCaps &deviceCaps, bool /* renderable */)
 {
-    // No partial B4G4R4A4 support and no full support
+    // This function should return true if we can't use DXGI_FORMAT_B4G4R4A4 for neither read-only textures nor renderable ones.
+    // To do this, we check that both of these are missing:
+    // - No support for DXGI_FORMAT_B4G4R4A4 as a renderable texture ('SupportsFormat')
+    // - No support for DXGI_FORMAT_B4G4R4A4 as a non-renderable texture ('OnlyPartialB4G4R4A4')
     // Use two nots with && (instead of one not with ||) to benefit from lazy evaluation
-    return (!(OnlyPartialB4G4R4A4<false>(deviceCaps, false)) && !(SupportsFormat<DXGI_FORMAT_B4G4R4A4_UNORM, false>(deviceCaps, false)));
+    return (!(OnlyPartialB4G4R4A4<false>(deviceCaps, false)) && !(SupportsFormat<DXGI_FORMAT_B4G4R4A4_UNORM, true>(deviceCaps, false)));
 }
 
 ColorCopyFunction DXGIFormat::getFastCopyFunction(GLenum format, GLenum type) const
